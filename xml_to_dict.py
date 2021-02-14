@@ -30,9 +30,9 @@ store_results = dict()
 # do analysis on each study through json format
 for each in data['search_results']['study'][:4]:
     # Use formatDrugNames.py and change the dictionary
-    # for inv in each['interventions']['intervention']:
-    #     changed = formatDrugNames.formatDrugName(inv['#text'])
-    #     print(changed)
+    for inv in each['interventions']['intervention']:
+        changed = formatDrugNames.formatDrugName(inv['#text'])
+        print(changed)
 
     # put into final dict, store_results
     store_results[each['@rank']]=each

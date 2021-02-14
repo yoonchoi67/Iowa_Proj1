@@ -1,7 +1,7 @@
 
 import xml.etree.ElementTree as ET 
 import json
-
+from formatDrugNames import formatDrugName
 def parseXML(xmlfile): 
     tree = ET.parse(xmlfile)
     root = tree.getroot()
@@ -30,6 +30,7 @@ def parseJSON(jsonfile):
     phase_dict = getPhaseData(data)
     status_dict = getActivityStatus(data)
     intervention_dict, num_intervention = getInterventionStatus(data)
+    return data
     print(phase_dict)
     print(status_dict)
     print(intervention_dict)
@@ -39,7 +40,6 @@ def parseJSON(jsonfile):
 def getInterventionStatus(data):
     intervention_dict = {}
     num_intervention_dict = {}
-    type_dict = {}
     for study in data['search_results']['study']:
         if type(study['interventions']) is type(None):
             if not "None" in intervention_dict:
@@ -66,14 +66,16 @@ def getInterventionStatus(data):
                 else:
                     num_intervention_dict[i] += 1
                 for x in study['interventions']['intervention']:
+                    if type(x) is str:
+                        continue
                     if not x["@type"] in intervention_dict:
                         intervention_dict[x["@type"]] = 1
                     else:
                         intervention_dict[x["@type"]] += 1
 
- 
+
     return intervention_dict, num_intervention_dict
-    
+
 def getActivityStatus(data):
     status_dict = {};
     for study in data['search_results']['study']:
@@ -140,10 +142,49 @@ def getPhaseData(data):
     #print(phases_dictionary)
     return phases_dictionary
 
+def getDrugDictionary(data):
+    drug_dict = {}
+    num_intervention_dict = {}
+    for study in data['search_results']['study']:
+        if type(study['interventions']) is type(None):
+            if not "None" in drug_dict:
+                drug_dict["None"] = 1
+            else:
+                drug_dict["None"] += 1
+        else:
+            
+            if str(type(study['interventions']['intervention']))=="<type 'dict'>":
+                print('hey this happened!')
+                return
+                if not 1 in num_intervention_dict:
+                    num_intervention_dict[1] = 1
+                else:
+                    num_intervention_dict[1] += 1
+                if not study['interventions']['intervention']["@type"] in drug_dict:
+                    drug_dict[study['interventions']['intervention']["@type"]] = 1
+                else:
+                    drug_dict[study['interventions']['intervention']["@type"]] += 1
+            else:
+                i = len(study['interventions']['intervention'])
+                if not i in num_intervention_dict:
+                    num_intervention_dict[i] = 1
+                else:
+                    num_intervention_dict[i] += 1
+                for x in study['interventions']['intervention']:
+                    if type(x) is str:
+                        continue
+                    drug_name = formatDrugName(x['#text'])
+                    if not drug_name in drug_dict:
+                        drug_dict[drug_name] = 1
+                    else:
+                        drug_dict[drug_name] += 1
 
-      
+
+    return drug_dict
+    
 def main():
-    parseJSON('data/outfile.json')
+    data = parseJSON('data/outfile.json')
+    getDrugDictionary(data)
     #parseXML('COVIDSearchResults.xml') 
   
     

@@ -3,7 +3,8 @@ import json
 import urllib.request
 def getStandardName(term):
     term = term.replace(' ','%')
-    base="https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term={}".format(term)
+    term = term.replace('&','')
+    base="https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term={}&option=1".format(term)
     with urllib.request.urlopen(base) as response:
         jsonData = json.loads(response.read())
     try:
@@ -14,10 +15,18 @@ def getStandardName(term):
     getNameURL = "https://rxnav.nlm.nih.gov/REST/rxcui/{}.json".format(firstMatch['rxcui'])
     with urllib.request.urlopen(getNameURL) as response:
         nameData = json.loads(response.read())
-    return nameData['idGroup']['name'].lower()
+    try:
+        return nameData['idGroup']['name'].lower()
+    except:
+        print(term)
+        print(base)
+        print(firstMatch)
+        print(nameData)
+        soefijo
 
 def removeDosing(singleDrug):
     #remove dose information
+    
     units=["ml","mol","g","mg","%",]
     singleDrug = re.sub(r"""(high|medium|low|[1-4]|one|two|three|four)(\s)+dose(s)?""",'', singleDrug)
     singleDrug = re.sub(r"""([0-9]+)(\.)?(\s)?(ml|mol|g|mg|kg|%)(/(ml|mol|g|mg|kg|%))?""",'', singleDrug)
@@ -35,6 +44,8 @@ def removeDosing(singleDrug):
     
 def formatDrugName(singleDrug):
     singleDrug = singleDrug.lower()
+    #get rid of unicode
+    singleDrug = singleDrug.encode("ascii","ignore").decode()
     #common subsitutions
     if "placebo" in singleDrug or "saline" in singleDrug:
         return "placebo"
@@ -48,5 +59,8 @@ def formatDrugName(singleDrug):
         return "no intervention"
     singleDrug = removeDosing(singleDrug)
     singleDrug = singleDrug.strip()
-    singleDrug = getStandardName(singleDrug)
+    try:
+        singleDrug = getStandardName(singleDrug)
+    except:
+        print("HTTP error!")
     return singleDrug
