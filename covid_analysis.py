@@ -2,6 +2,9 @@
 import xml.etree.ElementTree as ET 
 import json
 from formatDrugNames import formatDrugName
+import datetime
+from dateutil.parser import parse
+
 def parseXML(xmlfile): 
     tree = ET.parse(xmlfile)
     root = tree.getroot()
