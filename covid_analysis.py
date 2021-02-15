@@ -362,6 +362,15 @@ def getGenderData(data):
 
 
 def getResultAvailabilityData(data):
+    resultAvailability_dictionary = {}
+    for i, study in enumerate(data['search_results']['study']):
+        result=study['study_results']
+        if not result in resultAvailability_dictionary:
+            resultAvailability_dictionary[result]=1
+        else:
+            resultAvailability_dictionary[result]+=1
+
+    return resultAvailability_dictionary
 
 def getDrugDictionary(data):
     drug_dict = {}
