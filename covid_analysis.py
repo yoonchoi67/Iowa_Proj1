@@ -2,6 +2,8 @@
 import xml.etree.ElementTree as ET 
 import json
 
+
+
 def parseXML(xmlfile): 
     tree = ET.parse(xmlfile)
     root = tree.getroot()
@@ -24,16 +26,27 @@ def parseXML(xmlfile):
         
     print(phases_dictionary)
 
+
+
 def parseJSON(jsonfile):
     f=open(jsonfile)
     data=json.load(f)
     phase_dict = getPhaseData(data)
     status_dict = getActivityStatus(data)
     intervention_dict, num_intervention = getInterventionStatus(data)
+    gender_dict = getGenderData(data)
+    #get age eligibility data
+    hasResult_dict = getResultAvailabilityData(data)
+    #design aspects such as randomization
+    #study duration
+    #2 other features of our choices
     print(phase_dict, "\n")
     print(status_dict, "\n")
     print(intervention_dict, "\n")
     print(num_intervention, "\n")
+    print(gender_dict, "\n")
+    print(hasResult_dict, "\n")
+    
 
     
 def getPhaseData(data):
@@ -79,6 +92,7 @@ def getPhaseData(data):
     return phases_dictionary
 
 
+
 def getActivityStatus(data):
     status_dict = {}
     for study in data['search_results']['study']:
@@ -99,6 +113,7 @@ def getActivityStatus(data):
         else:
                 status_dict[p] += 1
     return status_dict
+
 
 
 def getInterventionStatus(data):
@@ -139,7 +154,39 @@ def getInterventionStatus(data):
  
     return intervention_dict, num_intervention_dict
     
-      
+
+
+def getGenderData(data):
+    gender_dictionary = {}
+    for i, study in enumerate(data['search_results']['study']):
+        # if gender for the study is available
+        try:
+            gdr=study['gender']
+            if not gdr in gender_dictionary:
+                gender_dictionary[gdr]=1
+            else:
+                gender_dictionary[gdr]+=1
+        # no gender information available
+        except:
+            if not 'Not Available' in gender_dictionary:
+                gender_dictionary['Not Available']=1
+            else:
+                gender_dictionary['Not Available']+=1
+    return gender_dictionary
+
+
+
+def getResultAvailabilityData(data):
+    resultAvailability_dictionary = {}
+    for i, study in enumerate(data['search_results']['study']):
+        result=study['study_results']
+        if not result in resultAvailability_dictionary:
+            resultAvailability_dictionary[result]=1
+        else:
+            resultAvailability_dictionary[result]+=1
+
+    return resultAvailability_dictionary
+
 def main():
     parseJSON('data/outfile.json')
     #parseXML('COVIDSearchResults.xml') 
