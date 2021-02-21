@@ -30,6 +30,7 @@ def parseJSON(jsonfile):
     data=json.load(f)
     data_list = filterResults(data)
     data['search_results']['study'] = data_list
+    print("NUMBER LEFT", len(data['search_results']['study']))
     phase_dict = getPhaseData(data)
     status_dict = getActivityStatus(data)
     intervention_dict, num_intervention = getInterventionStatus(data)
@@ -74,13 +75,16 @@ def parseJSON(jsonfile):
 def filterResults(data):
     data_dict = []
     search = data['search_results']['query'].encode('utf-8')
+    print(search, "has a type", type(search))
     for study in data['search_results']['study']:
         if not 'conditions'  in study:
             print("NOT IN STUDY")
-        elif str(type(study['conditions'])) == "<type 'NoneType'>":
+        # elif str(type(study['conditions'])) == "<type 'NoneType'>":
+        elif type(study['conditions']) is type(None):
             print("NULL")
         else:
-            if str(type(study['conditions']['condition'])) == "<type 'unicode'>":
+            # if str(type(study['conditions']['condition'])) == "<type 'unicode'>":
+            if type(study['conditions']['condition']) is str:
                 if search in study['conditions']['condition'].encode('utf-8'):
                     data_dict.append(study)
                     #print("MATCH" + " " + study['@rank'])
@@ -199,7 +203,8 @@ def getInterventionStatus(data):
                 num_intervention_dict[0] += 1
         else:
             
-            if str(type(study['interventions']['intervention']))=="<type 'dict'>":
+            # if str(type(study['interventions']['intervention']))=="<type 'dict'>":
+            if type(study['interventions']['intervention']) is dict:
                 if not 1 in num_intervention_dict:
                     num_intervention_dict[1] = 1
                 else:
@@ -251,13 +256,15 @@ def studyDesignData(data):
     study_list = []
     for study in data['search_results']['study']:
         dictionary = {}
-        if str(type(study['study_designs'])) == "<type 'NoneType'>":
+        # if str(type(study['study_designs'])) == "<type 'NoneType'>":
+        if type(study['study_designs']) is type(None):
             if not "None" in study_dict:
                  study_dict["None"] = 1
             else:
                 study_dict["None"] += 1
         else:
-            if str(type(study['study_designs']['study_design'])) == "<type 'unicode'>":
+            # if str(type(study['study_designs']['study_design'])) == "<type 'unicode'>":
+            if type(study['study_designs']['study_design']) is str:
                 
                 l = study['study_designs']['study_design'].split(':')
                 dictionary[l[0]] = l[1]
@@ -334,16 +341,17 @@ def getPhaseData(data):
     for study in data['search_results']['study']:
         
         if type(study['phases']) is type(None):
-            countNone+=1
+            # countNone+=1
             if not "None" in phases_dictionary:
-                phases_dictionary["None"] = countNone
+                phases_dictionary["None"] = 1
             else:
                 phases_dictionary["None"] += 1
 
         else:
             for phase in study['phases']:
                 #print(type(study['phases'][phase]))
-                if str(type(study['phases'][phase]))=="<type 'unicode'>":
+                # if str(type(study['phases'][phase]))=="<type 'unicode'>":
+                if type(study['phases'][phase]) is str:
                     countSingle+=1
                     p = study['phases'][phase]
                     if not p in phases_dictionary:
@@ -368,14 +376,16 @@ def locationCount(data):
     total_study = 0
     for study in data['search_results']['study']:
         total_study += 1
-        if str(type(study['locations'])) == "<type 'NoneType'>":
+        # if str(type(study['locations'])) == "<type 'NoneType'>":
+        if type(study['locations']) is type(None):
             if not 'None' in type_dict:
                 type_dict[0] = 1
             else:
                 type_dict[0] += 1
         else:
             if 'location' in study['locations']:
-                if str(type(study['locations']['location'])) == "<type 'unicode'>":
+                # if str(type(study['locations']['location'])) == "<type 'unicode'>":
+                if type(study['locations']['location']) is str:
                     total_loc+=1
                     #print(study['locations']['location'].encode('utf-8'))
                     if not 1 in type_dict:
@@ -450,6 +460,7 @@ def getResultAvailabilityData(data):
 def main():
     print("HEPATITIS A:")
     parseJSON('data/outfile.json')
+    print("\n\n")
     print("COVID-19:")
     parseJSON('data/COVIDoutfile.json')
     

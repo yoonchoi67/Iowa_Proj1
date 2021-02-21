@@ -4,7 +4,7 @@ import formatDrugNames
 #preliminary parsing
 #================================================================================#
 
-# create an outfile.json output file if not exists
+# create an outfile.json (HepA Results) output file if not exists
 if not os.path.exists('data/outfile.json'):
     open('data/outfile.json', 'w').close()
 
@@ -19,28 +19,19 @@ if os.stat("data/outfile.json").st_size == 0:
 f=open('data/outfile.json')
 data=json.load(f)
 
-#================================================================================#
+# create an COVIDoutfile.json (COVID Results) output file if not exists
+if not os.path.exists('data/COVIDoutfile.json'):
+    open('data/COVIDoutfile.json', 'w').close()
 
+# convert SearchResults.xml to outfile.json if it hadn't been done before
+if os.stat("data/COVIDoutfile.json").st_size == 0:
+    with open('data/COVIDSearchResults.xml', 'r', encoding='utf-8') as myfile:
+        with open('data/COVIDoutfile.json', 'w', encoding='utf-8') as outfile:
+            obj = xmltodict.parse(myfile.read())
+            json.dump(obj, outfile, indent=4, sort_keys=True)
 
-#analysis
-#================================================================================#
-
-store_results = dict()
-
-# do analysis on each study through json format
-for each in data['search_results']['study'][:4]:
-    # Use formatDrugNames.py and change the dictionary
-    # for inv in each['interventions']['intervention']:
-    #     changed = formatDrugNames.formatDrugName(inv['#text'])
-    #     print(changed)
-
-    # put into final dict, store_results
-    store_results[each['@rank']]=each
-
-print("=================")
-
-for each in store_results.items():
-    print(each)
-    print("\n")
+# json load
+f=open('data/COVIDoutfile.json')
+data=json.load(f)
 
 #================================================================================#
