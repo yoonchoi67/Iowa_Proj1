@@ -28,9 +28,11 @@ def parseXML(xmlfile):
 def parseJSON(jsonfile):
     f=open(jsonfile)
     data=json.load(f)
+    #filter out the studies we want to look at
     data_list = filterResults(data)
     data['search_results']['study'] = data_list
-    print("NUMBER LEFT", len(data['search_results']['study']))
+
+    #get various data we want
     phase_dict = getPhaseData(data)
     status_dict = getActivityStatus(data)
     intervention_dict, num_intervention = getInterventionStatus(data)
@@ -38,6 +40,12 @@ def parseJSON(jsonfile):
     gender_dict = getGenderData(data)
     #get age eligibility data
     hasResult_dict = getResultAvailabilityData(data)
+    age_group = getAgeGroups(data)
+    min_age, max_age = getMinMaxAge(data)
+    study_duration=getStudyDuration(data)
+    enrollmentCount, studyCount = getEnrollmentCount(data)
+    total_loc, total_study, type_dict = getLocationCount(data)
+
     print("Phases and their frequencies:")
     print(phase_dict)
     print("Trial statuses and their frequencies:")
@@ -50,29 +58,36 @@ def parseJSON(jsonfile):
     print(study_type)
     print("Genders and their frequency:")
     print(gender_dict)
-    print("Study results and their frequency:")
-    print(hasResult_dict)
-    age_group = getAgeGroups(data)
     print("Age groups/frequencies: ")
     print(age_group)
-    min_age, max_age = getMinMaxAge(data)
     print("Min Age: ")
     print(min_age)
     print("max age: ")
     print(max_age)
+    print("Study results and their frequency:")
+    print(hasResult_dict)
     print("Study duration in months:")
-    getStudyDuration(data)
-    
+    print(study_duration)
     #IN PROGRESS FUNCTIONS:
     print("Enrollment counts:")
-    enrollmentCount(data)
-    print("Location counts:")
-    locationCount(data)
+    print(enrollmentCount)
+    print("Study counts")
+    print(studyCount)
+    print("Total location counts:")
+    print(total_loc)
+    print("Total study counts:")
+    print(total_study)
+    print("Location per study counts:")
+    print(type_dict)
     print("study design data:")
     studyDesignData(data)
 
-
 def filterResults(data):
+    """filter those that do not meet criteria, such as it not having what it is testing.
+       this reduces the number of hepA studies to 71, and covid studies to 1536.
+    Args: data: dict
+    Returns: data_dict: dict
+    """
     data_dict = []
     search = data['search_results']['query'].encode('utf-8')
     print(search, "has a type", type(search))
@@ -97,6 +112,10 @@ def filterResults(data):
     return data_dict
         
 def getStudyDuration(data):
+    """get study duration of the studies
+    Args: data: dict
+    Returns: duration_dict: dict
+    """
     duration_dict = {}
     for study in data['search_results']['study']:
         startdate = ''
@@ -121,18 +140,26 @@ def getStudyDuration(data):
             duration_dict[num_months] = 1
         else:
             duration_dict[num_months] += 1
+    return duration_dict
 
-    print(duration_dict)
 def getStudyResults(data):
+    """get study results
+    Args: data: dict
+    Returns: type_dict: dict 
+    """
     type_dict = {}
     for study in data['search_results']['study']:
         if not study['study_results'] in type_dict:
             type_dict[study['study_results']] = 1
         else:
             type_dict[study['study_results']] += 1
-    print(type_dict)
+    return type_dict
 
 def getAgeGroups(data):
+    """get age group of the studies
+    Args: data: dict
+    Returns: age_group: dict
+    """
     age_group = {}
     for study in data['search_results']['study']:
         if str(type(study['age_groups']['age_group']))=="<type 'unicode'>":
@@ -151,6 +178,10 @@ def getAgeGroups(data):
     return age_group
 
 def getMinMaxAge(data):
+    """get min max age of the studies
+    Args: data: dict
+    Returns: min_age_group, max_age_group: dict
+    """
     max_age_group = {}
     min_age_group = {}
     for study in data['search_results']['study']:
@@ -167,6 +198,10 @@ def getMinMaxAge(data):
     return min_age_group, max_age_group
 
 def getGender(data):
+    """get gender of the studies
+    Args: data: dict
+    Returns: gender_dict: dict
+    """
     gender_dict = {}
     for study in data['search_results']['study']:
         if 'gender' in study:
@@ -182,6 +217,10 @@ def getGender(data):
     return gender_dict
 
 def getStudyType(data):
+    """get study type of the studies
+    Args: data: dict
+    Returns: study_type_dict: dict
+    """
     study_type_dict = {}
     for study in data['search_results']['study']:
         if not study['study_types'] in study_type_dict:
@@ -191,6 +230,10 @@ def getStudyType(data):
     return study_type_dict
 
 def getInterventionStatus(data):
+    """get intervention status of the studies
+    Args: data: dict
+    Returns: intervention_dict, num_intervention_dict: dict
+    """
     intervention_dict = {}
     num_intervention_dict = {}
     for study in data['search_results']['study']:
@@ -229,6 +272,10 @@ def getInterventionStatus(data):
     return intervention_dict, num_intervention_dict
     
 def getActivityStatus(data):
+    """get activity status of the studies
+    Args: data: dict
+    Returns: status_dict: dict
+    """
     status_dict = {};
     for study in data['search_results']['study']:
         #print(type(study['status']))
@@ -251,6 +298,10 @@ def getActivityStatus(data):
 
 
 def studyDesignData(data):
+    """get study design of the studies
+    Args: data: dict
+    Returns: status_dict: dict
+    """
     study_dict = {}
     type_dict = {}
     study_list = []
@@ -323,15 +374,19 @@ def studyDesignData(data):
                 observational_model_dict[var] = 1
             else:
                 observational_model_dict[var]+=1
-    print(primary_purpose_dict)
-    print(intervention_model_dict)
-    print(allocation_dict)
-    print(masking_dict)
-    print(time_perspective_dict)
-    print(observational_model_dict)
+    print("primary_purpose_dict: ", primary_purpose_dict)
+    print("intervention_model_dict: ", intervention_model_dict)
+    print("allocation_dict: ", allocation_dict)
+    print("masking_dict: ", masking_dict)
+    print("time_perspective_dict: ", time_perspective_dict)
+    print("observational_model_dict: ", observational_model_dict)
              
 
 def getPhaseData(data):
+    """get phase data of the studies
+    Args: data: dict
+    Returns: phases_dictionary: dict
+    """
     phases_dictionary = {}
     countNone = 0;
     countMulti = 0
@@ -370,7 +425,12 @@ def getPhaseData(data):
     return phases_dictionary
 
 
-def locationCount(data):
+def getLocationCount(data):
+    """get location data of the studies
+    Args: data: dict
+    Returns: total_loc, total_study: int
+             type_dict: dict
+    """
     type_dict = {}
     total_loc = 0
     total_study = 0
@@ -402,11 +462,13 @@ def locationCount(data):
                     else:
                         type_dict[count] += 1
 
-    print(total_loc)
-    print(total_study)
-    print(type_dict)
+    return total_loc, total_study, type_dict
 
-def enrollmentCount(data):
+def getEnrollmentCount(data):
+    """get enrollment data of the studies
+    Args: data: dict
+    Returns: enrollmentCount, studyCount: int
+    """
     type_dict = {}
     enrollmentCount = 0
     studyCount = 0
@@ -422,10 +484,13 @@ def enrollmentCount(data):
                 x = int(study['enrollment'])
                 enrollmentCount+=x
                 type_dict[study['enrollment']] += 1
-    print(enrollmentCount)
-    print(studyCount)
+    return enrollmentCount, studyCount
 
 def getGenderData(data):
+    """get gender data of the studies
+    Args: data: dict
+    Returns: gender_dictionary: dict
+    """
     gender_dictionary = {}
     for i, study in enumerate(data['search_results']['study']):
         # if gender for the study is available
@@ -444,8 +509,11 @@ def getGenderData(data):
     return gender_dictionary
 
 
-
 def getResultAvailabilityData(data):
+    """get result availability data of the studies
+    Args: data: dict
+    Returns: resultAvailability_dictionary: dict
+    """
     resultAvailability_dictionary = {}
     for i, study in enumerate(data['search_results']['study']):
         result=study['study_results']
