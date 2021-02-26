@@ -80,11 +80,11 @@ def filterResults(data):
             
     
 def main():
-    print("HEPATITIS A:")
+    print("\n\nHEPATITIS A:")
     parseJSON('data/outfile.json')
     print("\n\n")
-    # print("COVID-19:")
-    # parseJSON('data/COVIDoutfile.json')
+    print("COVID-19:")
+    parseJSON('data/COVIDoutfile.json')
     
       
       

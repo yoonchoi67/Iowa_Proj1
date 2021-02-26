@@ -44,14 +44,14 @@ def getSponsors(data):
 
                 # also put the number of collaborator (one) in collaborators dictionary
                 if 1 not in collaborators: collaborators[1] = 1
-                else: collaborators[1] +=1
+                else: collaborators[1] += 1
 
             # multiple collaborators
             else:
                 collab_len = len(temp_collaborators)
                 for each in temp_collaborators:
                     if each not in collab_dict: collab_dict[each] = 1
-                    else: collab_dict[each] +=1
+                    else: collab_dict[each] += 1
 
                 # also put the number of collaborator (one) in collaborators dictionary
                 if collab_len not in collaborators: collaborators[collab_len] = 1
@@ -59,16 +59,23 @@ def getSponsors(data):
                 
         except Exception as e:
             print("BROKEN AT RANK: ", study['@rank'])
-            print("ERROR: ", e.args)
-            print("SO FAR: ", lead_dict)
             break
 
     # sort by the frequencies
-    # lead_dict = sorted(lead_dict.items(), key=lambda x: x[1], reverse=True)
-    # collaborators = sorted(collaborators.items(), key=lambda x: x[1], reverse=True)
+    lead_dict = sorted(lead_dict.items(), key=lambda x: x[1], reverse=True)
+    collab_dict = sorted(collab_dict.items(), key=lambda x: x[1], reverse=True)
     
     # return sponsor
     return lead_dict, collab_dict, collaborators
+
+
+def getOverlaps(hep_dict, covid_dict):
+    """
+    - get overlap between Hep A sponsors and COVID-19 sponsors
+    Args: hep_data, covid_data: dict
+    Returns: overlap_dict: dict
+    """
+    return
 
 
 def getAllPartC(data):
@@ -76,6 +83,10 @@ def getAllPartC(data):
     lead_dict, collab_dict, collaborators = getSponsors(data)
     
     """Print Part C"""
-    print("Sponsors: ", lead_dict, "\n")
-    print("collab length: ", collab_dict, "\n")
-    print("Collaborators: ", collaborators)
+    print("- Number of sponsors: ", len(lead_dict))
+    print("- Sponsors: ", lead_dict[:15])
+    print("- Number of collaborators: ", len(collab_dict))
+    print("- Collaborators: ", collab_dict[:15])
+    
+    print("- Collaborators per study and their frequencies: ", collaborators)
+    
