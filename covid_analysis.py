@@ -83,8 +83,8 @@ def main():
     print("HEPATITIS A:")
     parseJSON('data/outfile.json')
     print("\n\n")
-    print("COVID-19:")
-    parseJSON('data/COVIDoutfile.json')
+    # print("COVID-19:")
+    # parseJSON('data/COVIDoutfile.json')
     
       
       
