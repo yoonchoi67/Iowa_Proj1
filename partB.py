@@ -106,17 +106,22 @@ def getAllPartB(data):
     print("Number of trials ongoing at any year: ", anytime, "\n")
     print("Number of trials ended at each year: ", end, "\n")
     
+    """ Only did it for start, not anytime or end """
     """ Show Bar Graph """
     fig = plt.figure()
     plt.bar(range(len(start)), list(start.values()), align='center')
     plt.xticks(range(len(start)), list(start.keys()))
-    fig.suptitle('Start year')
+    fig.suptitle('Start year bar graph')
     plt.xlabel('year')
     plt.ylabel('frequency')
     plt.show()
 
     """ Show Box Chart """
     # not sure if we need this
+    fig = plt.figure()
     x = [k for k, v in start.items()]
     plt.boxplot(x)
+    fig.suptitle('Start year box chart')
+    plt.xlabel('year')
+    plt.ylabel('frequency')
     plt.show()
