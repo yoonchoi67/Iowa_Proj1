@@ -56,8 +56,6 @@ def getTrends(data):
     start_year_dict = {}
     end_year_dict = {}
     anytime_dict = {}
-
-    duration_dict = {}
     
     for study in data['search_results']['study']:
         startdate = ''
@@ -81,15 +79,21 @@ def getTrends(data):
         else: start_year_dict[startdate.year] += 1
         
         #update end_year_dict
-        if end.year not in end_year_dict: end_year_dict[end.year] = 1
+        if end.year > 2021: pass # I did this because there are some ridiculuous numbers like 2100
+        elif end.year not in end_year_dict: end_year_dict[end.year] = 1
         else: end_year_dict[end.year] += 1
         
         #update anytime_dict
         duration = end.year - startdate.year + 1
         for i in range(duration):
             yr = startdate.year + i
-            if yr not in anytime_dict: anytime_dict[yr] = 1
+            if yr > 2021: continue # I did this because there are some ridiculuous numbers like 2100
+            elif yr not in anytime_dict: anytime_dict[yr] = 1
             else: anytime_dict[yr] += 1
+    
+    start_year_dict = sorted(start_year_dict.items(), key=lambda x: x[0])
+    anytime_dict = sorted(anytime_dict.items(), key=lambda x: x[0])
+    end_year_dict = sorted(end_year_dict.items(), key=lambda x: x[0])
 
     return start_year_dict, anytime_dict, end_year_dict
 
@@ -106,22 +110,61 @@ def getAllPartB(data):
     print("Number of trials ongoing at any year: ", anytime, "\n")
     print("Number of trials ended at each year: ", end, "\n")
     
-    """ Only did it for start, not anytime or end """
-    """ Show Bar Graph """
-    fig = plt.figure()
-    plt.bar(range(len(start)), list(start.values()), align='center')
-    plt.xticks(range(len(start)), list(start.keys()))
-    fig.suptitle('Start year bar graph')
-    plt.xlabel('year')
-    plt.ylabel('frequency')
-    plt.show()
+    """ Messy but it works. Bar graphs and Box charts """
+    if True:
+        """ Start """
+        """ Bar Graph """
+        fig = plt.figure()
+        plt.bar(range(len(start)), [val[1] for val in start], align='center')
+        plt.xticks(range(len(start)), [val[0] for val in start], rotation='vertical')
+        fig.suptitle('Start year bar graph')
+        plt.xlabel('year')
+        plt.ylabel('frequency')
+        plt.show()
+        """ Box Chart """
+        # not sure if we need this
+        fig = plt.figure()
+        x = [val[0] for val in start]
+        plt.boxplot(x)
+        fig.suptitle('Start year box chart')
+        plt.xlabel('frequency')
+        plt.ylabel('year')
+        plt.show()
+        
+        """ Study at any time of the year"""
+        """ Bar Graph """
+        fig = plt.figure()
+        plt.bar(range(len(anytime)), [val[1] for val in anytime], align='center')
+        plt.xticks(range(len(anytime)), [val[0] for val in anytime], rotation='vertical')
+        fig.suptitle('Study at any time of the year bar graph')
+        plt.xlabel('year')
+        plt.ylabel('frequency')
+        plt.show()
+        """ Box Chart """
+        # not sure if we need this
+        fig = plt.figure()
+        x = [val[0] for val in anytime]
+        plt.boxplot(x)
+        fig.suptitle('anytime year box chart')
+        plt.xlabel('frequency')
+        plt.ylabel('year')
+        plt.show()
 
-    """ Show Box Chart """
-    # not sure if we need this
-    fig = plt.figure()
-    x = [k for k, v in start.items()]
-    plt.boxplot(x)
-    fig.suptitle('Start year box chart')
-    plt.xlabel('year')
-    plt.ylabel('frequency')
-    plt.show()
+        """ End """
+        """ Bar Graph """
+        fig = plt.figure()
+        plt.bar(range(len(end)), [val[1] for val in end], align='center')
+        plt.xticks(range(len(end)), [val[0] for val in end], rotation='vertical')
+        fig.suptitle('End year bar graph')
+        plt.xlabel('year')
+        plt.ylabel('frequency')
+        plt.show()
+        """ Box Chart """
+        # not sure if we need this
+        fig = plt.figure()
+        x = [val[0] for val in end]
+        plt.boxplot(x)
+        fig.suptitle('End year box chart')
+        plt.xlabel('frequency')
+        plt.ylabel('year')
+        plt.show()

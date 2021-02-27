@@ -41,11 +41,11 @@ def parseJSON(jsonfile):
     
     """Part B"""
     # comment this in or out if you want to print part B results
-    partB.getAllPartB(data)
+    # partB.getAllPartB(data)
 
     """Part C"""
     # comment this in or out if you want to print part C results
-    # partC.getAllPartC(data)
+    partC.getAllPartC(data)
 
 """Initial"""
 def filterResults(data):
