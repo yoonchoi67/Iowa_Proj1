@@ -100,8 +100,8 @@ def getAllPartB(data):
     start, anytime, end = getTrends(data)
 
     """Print Part B"""
-    # print("Most Studied Drugs and their frequencies: ", mostStudiedDrugsDict, "\n")
-    # print("Most Serious Adverse Events that occurred: ", mostAdverseEvents, "\n")
+    print("Most Studied Drugs and their frequencies: ", mostStudiedDrugsDict, "\n")
+    print("Most Serious Adverse Events that occurred: ", mostAdverseEvents, "\n")
     print("Number of trials started at each year: ", start, "\n")
     print("Number of trials ongoing at any year: ", anytime, "\n")
     print("Number of trials ended at each year: ", end, "\n")
