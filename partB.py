@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET 
 import json
 import datetime
+import urllib.request
+
 from dateutil.parser import parse
 import matplotlib.pyplot as plt
 
@@ -18,7 +20,8 @@ def getMostStudiedDrugs(data):
                 continue
             # only one type of intervention
             elif type(study['interventions']['intervention']) is dict:
-                if study['interventions']['intervention']['@type'] is "Drug" or "Biological":
+                if study['interventions']['intervention']['@type'] == "Drug" or \
+                   study['interventions']['intervention']['@type'] == "Biological":
                     if each['#text'] not in mostStudiedDrugsDict:
                         mostStudiedDrugsDict[each['#text']]=1
                     else:
@@ -27,7 +30,7 @@ def getMostStudiedDrugs(data):
             else:
                 for each in study['interventions']['intervention']:
                     # print(each['@type'])
-                    if each['@type'] is "Drug" or "Biological":
+                    if each['@type'] == "Drug" or ['@type'] == "Biological":
                         if each['#text'] not in mostStudiedDrugsDict:
                             mostStudiedDrugsDict[each['#text']]=1
                         else:
@@ -40,18 +43,105 @@ def getMostStudiedDrugs(data):
     # return 15 most studied drugs
     return mostStudiedDrugsDict[:15]
 
-def study_has_results(study):
-    pass
+def studyHasResults(study):
+    return study["study_results"] != "No Results Available"
 
+def retrieveStudyData(nct_id):
+    base = "https://clinicaltrials.gov/api/query/full_studies?expr={}&fmt=json".format(nct_id)
+    with urllib.request.urlopen(base) as response:
+        jsonData = json.loads(response.read())
+    fullData = jsonData["FullStudiesResponse"]["FullStudies"][0]["Study"]
+    return fullData
+
+def extractAdverseEventsFields(studyData):
+    adverseEvents = {"Deaths":0,"NumSeriousEvents":0,
+                     "NumVulnerable":0,"SeriousEvents":{}}
+    if 'ResultsSection' not in studyData or 'AdverseEventsModule' not in studyData['ResultsSection']:
+        return adverseEvents
+    baseData = studyData['ResultsSection']['AdverseEventsModule']
+    adverseGroupData = baseData["EventGroupList"]["EventGroup"]
+    for group in adverseGroupData:
+        adverseEvents["Deaths"] += int(group["EventGroupDeathsNumAffected"]) if "EventGroupDeathsNumAffected" in group else 0
+        adverseEvents["NumVulnerable"] += int(group["EventGroupSeriousNumAtRisk"]) if "EventGroupSeriousNumAtRisk" in group else 0
+        adverseEvents["NumSeriousEvents"] += int(group["EventGroupSeriousNumAffected"]) if "EventGroupSeriousNumAffected" in group else 0
+    if adverseEvents["NumSeriousEvents"] != 0:
+        seriousEventsData = baseData["SeriousEventList"]["SeriousEvent"]
+        for event in seriousEventsData:
+            #Note: total affected added over all events will be less than numSeriousEvents,
+            #because this splitting means some patients will be double listed
+            names = [n.strip() for n in event["SeriousEventTerm"]\
+                     .lower()\
+                     .replace('pneumonia viral','pneumonia')\
+                     .replace('acute respiratory distress','respiratory distress')\
+                     .replace('acute respiratory failure','respiratory failure')\
+                     .replace('syndrome','')\
+                     .split(";")]
+            for name in names:
+                adverseEvents["SeriousEvents"][name] = {}
+                adverseEvents["SeriousEvents"][name]["OrganSystem"] = event["SeriousEventOrganSystem"]
+                adverseEvents["SeriousEvents"][name]["NumAffected"] = 0
+                for group_affected in event["SeriousEventStatsList"]["SeriousEventStats"]:
+                    adverseEvents["SeriousEvents"][name]["NumAffected"] += int(group_affected["SeriousEventStatsNumAffected"])
+    return adverseEvents
+    
 def getAdverseEvents(data):
     """get 10 most serious adverse events that occured in trials for each disease
     Args: data: dict
     Returns: mostAdverseEvents: dict 
     """
-    mostAdverseEvents={}
+    #first, get the events by trial
+    seriousEventsByTrial = {}
+    seriousEventsByName = {}
+    #This will just count the number of events
+    #(NOT number affected, will count different
+    #things affecting one person's organ system as one event)
+    seriousEventsByOrganSystem = {}
     for study in data['search_results']['study']:
-        pass
-    return mostAdverseEvents
+        if studyHasResults(study):
+            nct_id = study["nct_id"]
+            studyData = retrieveStudyData(nct_id)
+            seriousEventsByTrial[nct_id] = extractAdverseEventsFields(studyData)
+        else:
+            continue
+    #now, arrange by event name
+    for trialName in seriousEventsByTrial.keys():
+        trialData = seriousEventsByTrial[trialName]
+        if trialData['NumSeriousEvents'] == 0:
+            continue
+        else:
+            for eventName in trialData["SeriousEvents"].keys():
+                eventData = trialData["SeriousEvents"][eventName]
+                if eventName in seriousEventsByName:
+                    seriousEventsByName[eventName]["NumAffected"] += eventData["NumAffected"]
+                else:
+                    seriousEventsByName[eventName] = eventData
+    for eventName in seriousEventsByName.keys():
+        eventData = seriousEventsByName[eventName]
+        organSystem = eventData["OrganSystem"]
+        if organSystem in seriousEventsByOrganSystem:
+            seriousEventsByOrganSystem[organSystem]["NumberOfEvents"] += eventData["NumAffected"]
+            #seriousEventsByOrganSystem[organSystem]["events"].add(eventName)
+        else:
+            seriousEventsByOrganSystem[organSystem] = {}
+            seriousEventsByOrganSystem[organSystem]["NumberOfEvents"] = eventData["NumAffected"]
+            #seriousEventsByOrganSystem[organSystem]["events"] = {eventName}
+    #filter out top 10
+    allEvents = list(seriousEventsByName.keys())
+    sortCriteria = lambda name : seriousEventsByName[name]["NumAffected"]
+    allEvents.sort(key = sortCriteria,reverse=True)
+    topTenList = allEvents[0:10]
+    topTenDict = {}
+    for eventName in topTenList:
+        topTenDict[eventName] = seriousEventsByName[eventName]
+    #Give some summary stats
+    print("Number of total participants: {}".format(sum([seriousEventsByTrial[n]["NumVulnerable"] for n in seriousEventsByTrial.keys()])))
+    print("Number of total adverse events : {}".format(sum([seriousEventsByTrial[n]["NumSeriousEvents"] for n in seriousEventsByTrial.keys()])))
+    print("Number participant deaths : {}".format(sum([seriousEventsByTrial[n]["Deaths"] for n in seriousEventsByTrial.keys()])))
+    print("Number of studies with results : {}".format(len(list(seriousEventsByTrial.keys()))))
+    print("Number of studies with results that reported at least one adverse event : {}".format(sum([seriousEventsByTrial[n]["NumSeriousEvents"]>0 for n in seriousEventsByTrial.keys()])))
+    for k in seriousEventsByOrganSystem.keys():
+          print("{}\t{}".format(k,seriousEventsByOrganSystem[k]["NumberOfEvents"]))
+    return topTenDict
 
 def getTrends(data):
     """get study duration of the studies
