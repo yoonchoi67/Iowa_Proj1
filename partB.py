@@ -40,12 +40,17 @@ def getMostStudiedDrugs(data):
     # return 15 most studied drugs
     return mostStudiedDrugsDict[:15]
 
+def study_has_results(study):
+    pass
+
 def getAdverseEvents(data):
     """get 10 most serious adverse events that occured in trials for each disease
     Args: data: dict
     Returns: mostAdverseEvents: dict 
     """
     mostAdverseEvents={}
+    for study in data['search_results']['study']:
+        pass
     return mostAdverseEvents
 
 def getTrends(data):
