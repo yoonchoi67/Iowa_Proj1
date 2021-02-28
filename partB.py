@@ -111,7 +111,7 @@ def getAllPartB(data):
     print("Number of trials ended at each year: ", end, "\n")
     
     """ Messy but it works. Bar graphs and Box charts """
-    if True:
+    if False:
         """ Start """
         """ Bar Graph """
         fig = plt.figure()
